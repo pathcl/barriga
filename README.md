@@ -22,6 +22,7 @@ $ pip3 install requests bs4 tqdm datasette
 $ cat flats.sql | sqlite3 flats.db
 
 $ python3 main.py
+
 $ python3 portal.py
 
 $ pip3 install datasette && datasette serve flats.db
