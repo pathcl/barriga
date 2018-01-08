@@ -1,0 +1,6 @@
+.vscode
+*.pyc
+scraper.py
+test.py
+flats.db
+barriga.sh
