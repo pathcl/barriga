@@ -24,14 +24,6 @@ def process_queue():
         main(flat)
         flat_queue.task_done()
 
-def shorturl(url):
-    post_url = 'https://www.googleapis.com/urlshortener/v1/url?key={}'.format('')
-    payload = {'longUrl': url}
-    headers = {'content-type': 'application/json'}
-    r = requests.post(post_url, data=json.dumps(payload), headers=headers)
-    return r.json()['id']
-
-
 def getallflats():
     total = []
     print('Total pages to scrape: {}'.format('495'))
@@ -57,12 +49,16 @@ def main(flat):
         tree = html.fromstring(r)
         commune = tree.xpath('//*[@id="wrapper"]/div/div/div/div[2]/div/ol/li[5]/a/text()')
         price = tree.xpath('//*[@id="divImagenes"]/div[2]/div/p[1]/text()')
+        totalrooms =  tree.xpath(
+            '//*[@id="wrapper"]/section/div/div/div[1]/article/div/div[2]/div[2]/div[2]/div[2]/p/text()')
+        size = tree.xpath(
+            '//*[@id="wrapper"]/section/div/div/div[1]/article/div/div[2]/div[2]/div[2]/div[3]/p/text()')
         if len(price) >= 1:
             q = ''.join(commune).replace(' ','')
             with print_lock:
                 with sql.connect('flats.db', check_same_thread=False) as conn:
-                    conn.execute('INSERT INTO flats (timestamp, price, flat, commune) VALUES (?,?,?,?)', (time.strftime(
-                        '%Y-%m-%d %H:%M:%S'), price[0].replace(' ','').replace('$','').replace('.',''), flat, q))
+                    conn.execute('INSERT INTO flats (timestamp, price, flat, commune, rooms, bathroom, size) VALUES (?,?,?,?,?,?,?)', (time.strftime(
+                        '%Y-%m-%d %H:%M:%S'), price[0].replace(' ', '').replace('$', '').replace('.', ''), flat, q, totalrooms[0][0], totalrooms[1][0], size[0][:2]))
 
     except Exception as e:
         logging.info(e)
