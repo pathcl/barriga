@@ -59,13 +59,6 @@ def getallflats():
 
     return flats
 
-def shorturl(url):
-    post_url = 'https://www.googleapis.com/urlshortener/v1/url?key={}'.format('')
-    payload = {'longUrl': url}
-    headers = {'content-type': 'application/json'}
-    r = requests.post(post_url, data=json.dumps(payload), headers=headers)
-    return r.json()['id']
-
 def main(flat):
     try:
         r = requests.get(flat).text
@@ -74,16 +67,33 @@ def main(flat):
             html = requests.get(flat).text
             soup = BeautifulSoup(html, 'lxml')
             tree = htm.fromstring(html)
+            price = ()
+            bathroom = ()
+            commune = ()
+            size = ()
+            rooms = ()
 
-            for each_div in soup.findAll('div', {'class': 'cont_price_detalle_f'}):
-                price = each_div.text.split()[1]
-                for comuna in tree.xpath('//div[@id="specs"]//li'):
-                    if comuna.text_content().startswith('Comuna'):
-                        commune = comuna.text_content().split(':')[1]
-                        with print_lock:
-                            with sql.connect('flats.db', check_same_thread=False) as conn:
-                                conn.execute('INSERT INTO flats (timestamp, price, flat, commune) VALUES (?,?,?,?)', (time.strftime(
-                                    '%Y-%m-%d %H:%M:%S'), price.replace('.', ''), flat, commune.replace(' ','')))
+            for price in soup.findAll('div', {'class': 'cont_price_detalle_f'}):
+                price = (price.text.split()[1].replace('.','')),
+            
+            for comuna in tree.xpath('//div[@id="specs"]//li'):
+                if comuna.text_content().startswith('Comuna'):
+                    commune = (comuna.text_content().split(':')[1].replace(' ','')),
+            
+            for rooms in tree.xpath('//*[@id="specs"]/ul/li[3]'):
+                rooms = (rooms.text_content().split()[1]),
+
+            for size in tree.xpath('//*[@id="specs"]/ul/li[5]'):
+                size = (size.text_content().split()[2]),
+
+            for bathroom in tree.xpath('//*[@id="specs"]/ul/li[4]'):
+                bathroom = (bathroom.text_content().split()[1]),
+
+            with print_lock:
+                with sql.connect('flats.db', check_same_thread=False) as conn:
+                    conn.execute('INSERT INTO flats (timestamp, price, commune, rooms, size, bathroom, flat) VALUES (?,?,?,?,?,?,?)', (time.strftime(
+                        '%Y-%m-%d %H:%M:%S'), ''.join(price), ''.join(commune), ''.join(rooms), ''.join(size), ''.join(bathroom), flat))
+                #print(price, commune, size, bathroom, flat)
 
     except Exception as e:
         logging.info(e)
