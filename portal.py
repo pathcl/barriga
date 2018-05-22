@@ -29,7 +29,7 @@ def getallflats():
     print('Total pages to scrape: {}'.format('495'))
     print('Gathering every page...')
 
-    for page in tqdm(range(1,495)):
+    for page in tqdm(range(0,1)):
         url = 'https://www.portalinmobiliario.com/arriendo/departamento/metropolitana?ca=3&ts=1&dd=2&mn=1&or=&sf=1&sp=0&at=0&pg=%d' % (page)
         html = requests.get(url).text
         soup = BeautifulSoup(html, 'lxml')
@@ -53,12 +53,15 @@ def main(flat):
             '//*[@id="wrapper"]/section/div/div/div[1]/article/div/div[2]/div[2]/div[2]/div[2]/p/text()')
         size = tree.xpath(
             '//*[@id="wrapper"]/section/div/div/div[1]/article/div/div[2]/div[2]/div[2]/div[3]/p/text()')
+        address = tree.xpath(
+            '//*[@id="wrapper"]/section/div/div/div[1]/article/div/div[2]/div[2]/div[2]/div[1]/p/text()')
         if len(price) >= 1:
             q = ''.join(commune).replace(' ','')
             with print_lock:
                 with sql.connect('flats.db', check_same_thread=False) as conn:
-                    conn.execute('INSERT INTO flats (timestamp, price, flat, commune, rooms, bathroom, size) VALUES (?,?,?,?,?,?,?)', (time.strftime(
-                        '%Y-%m-%d %H:%M:%S'), price[0].replace(' ', '').replace('$', '').replace('.', ''), flat, q, totalrooms[0][0], totalrooms[1][0], size[0][:2]))
+                    conn.execute('INSERT INTO flats (timestamp, price, flat, commune, rooms, bathroom, size, addr) VALUES (?,?,?,?,?,?,?,?)', (time.strftime(
+                        '%Y-%m-%d %H:%M:%S'), price[0].replace(' ', '').replace('$', '').replace('.', ''), flat, q, totalrooms[0][0], totalrooms[1][0], size[0][:2], 
+                        ''.join([item.text_content() for item in address]).strip()))
 
     except Exception as e:
         logging.info(e)

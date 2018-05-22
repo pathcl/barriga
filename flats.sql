@@ -3,6 +3,7 @@ drop table if exists flats;
     id integer primary key autoincrement,
     timestamp text not null,
     commune text not null,
+    address text,
     rooms integer,
     bathroom integer,
     size integer,
